@@ -162,8 +162,6 @@ h2{font-size:18px;font-weight:bold;margin:12px 0 8px}
 <div class="setting-row"><span class="setting-label">随机顺序</span><input id="set-random" type="checkbox" class="checkbox" style="width:22px;height:22px"></div>
 <div class="setting-row"><span class="setting-label">显示原文</span><input id="set-show-text" type="checkbox" class="checkbox" style="width:22px;height:22px"></div>
 <div class="setting-row"><span class="setting-label">自动播放下一个</span><input id="set-auto" type="number" min="0" max="30" class="input" style="width:70px"><span class="text-sm text-gray ml-8">秒(0=手动)</span></div>
-<div class="setting-row"><span class="setting-label">播放下一个快捷键</span><input id="set-shortcut-next" class="kse" value="Space"></div>
-<div class="setting-row"><span class="setting-label">复读快捷键</span><input id="set-shortcut-repeat" class="kse" value="R"></div>
 </div>
 <div class="btn-bar"><button class="btn btn-gray" onclick="showPage('page-home')">取消</button><button class="btn btn-primary" onclick="saveSettings()">保存</button></div>
 </div>
@@ -238,8 +236,6 @@ function showSettings() {
   document.getElementById('set-random').checked = c.random_order || false;
   document.getElementById('set-show-text').checked = c.show_text_in_dictation || false;
   document.getElementById('set-auto').value = c.auto_advance_interval || 0;
-  document.getElementById('set-shortcut-next').value = c.shortcut_next || 'Space';
-  document.getElementById('set-shortcut-repeat').value = c.shortcut_repeat || 'R';
   showPage('page-settings');
 }
 function saveSettings() {
@@ -249,8 +245,6 @@ function saveSettings() {
   Config.set('random_order', document.getElementById('set-random').checked);
   Config.set('show_text_in_dictation', document.getElementById('set-show-text').checked);
   Config.set('auto_advance_interval', parseInt(document.getElementById('set-auto').value)||0);
-  Config.set('shortcut_next', document.getElementById('set-shortcut-next').value||'Space');
-  Config.set('shortcut_repeat', document.getElementById('set-shortcut-repeat').value||'R');
   document.getElementById('lang').value = Config.get('language_mode','zh');
   backHome();
 }
@@ -343,18 +337,6 @@ function finishDictation() {
   setTimeout(() => showReview(), 800);
 }
 
-// ========== 监听键盘快捷键 ==========
-document.addEventListener('keydown', function(e) {
-  const dictPage = document.getElementById('page-dictation');
-  if (!dictPage.classList.contains('active')) return;
-  if (App.currentIdx >= App.items.length) return;
-  const sn = (App.config.shortcut_next || 'Space').toLowerCase();
-  const sr = (App.config.shortcut_repeat || 'R').toLowerCase();
-  const key = e.key === ' ' ? 'space' : e.key.toLowerCase();
-  if (key === sn && !e.ctrlKey && !e.altKey && !e.metaKey) { e.preventDefault(); nextItem() }
-  else if (key === sr && !e.ctrlKey && !e.altKey && !e.metaKey) { e.preventDefault(); repeatItem() }
-});
-
 // ========== 中途检查 ==========
 function checkNow() {
   speechSynth.cancel();
@@ -392,8 +374,9 @@ function saveWrongbook() {
   const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
   const defTitle = App.currentTitle ? `${dateStr} 错题(${wrong.length}项) - ${App.currentTitle}` : `${dateStr} 错题(${wrong.length}项)`;
   const title = prompt('错题本标题：', defTitle);
-  if (title && title.trim()) {
-    WB.save(title.trim(), wrong, App.reviewLang);
+  const finalTitle = (title && title.trim()) ? title.trim() : defTitle;
+  if (finalTitle) {
+    WB.save(finalTitle, wrong, App.reviewLang);
     alert(`已保存 ${wrong.length} 个错题到错题本`);
     backHome();
   }
