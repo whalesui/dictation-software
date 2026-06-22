@@ -310,19 +310,21 @@ function onReadComplete() {
   }
 }
 function enterWaiting() {
-  App.currentIdx++;
-  document.getElementById('dict-progress-fill').style.width = (App.currentIdx / App.items.length * 100) + '%';
-  document.getElementById('dict-progress-label').textContent = `第 ${App.currentIdx} / ${App.items.length} 个`;
-  document.getElementById('dict-status').textContent = App.currentIdx >= App.items.length ? '听写完成！' : '请写答案';
-  document.getElementById('btn-repeat').disabled = App.currentIdx >= App.items.length;
-  document.getElementById('btn-next').disabled = App.currentIdx >= App.items.length;
-  if (App.currentIdx >= App.items.length) { finishDictation(); return }
+  const completed = App.currentIdx + 1;
+  document.getElementById('dict-progress-fill').style.width = (completed / App.items.length * 100) + '%';
+  document.getElementById('dict-progress-label').textContent = `第 ${completed} / ${App.items.length} 个`;
+  const isLast = completed >= App.items.length;
+  document.getElementById('dict-status').textContent = isLast ? '听写完成！' : '请写答案';
+  document.getElementById('btn-repeat').disabled = isLast;
+  document.getElementById('btn-next').disabled = isLast;
+  if (isLast) { finishDictation(); return }
   const auto = App.config.auto_advance_interval || 0;
-  if (auto > 0) setTimeout(() => { if (App.dictating && App.currentIdx < App.items.length) nextItem() }, auto * 1000);
+  if (auto > 0) setTimeout(() => { if (App.dictating && completed < App.items.length) nextItem() }, auto * 1000);
 }
 function nextItem() {
   if (!App.dictating || App.currentIdx >= App.items.length) return;
   speechSynth.cancel();
+  App.currentIdx++;
   App.readCount = 0;
   playCurrent();
 }
